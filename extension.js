@@ -257,8 +257,8 @@ function _showTaskDetailsPopup(task) {
   const modal = new St.BoxLayout({
     style_class: "task-modal",
     vertical: true,
-    width: Math.min(600, monitor.width * 0.8),
-    height: Math.min(400, monitor.height * 0.8),
+    width: Math.min(500, monitor.width * 0.8),
+    height: Math.min(200, monitor.height * 0.8),
     x_align: Clutter.ActorAlign.CENTER,
     y_align: Clutter.ActorAlign.CENTER,
   });
@@ -307,7 +307,7 @@ function _showTaskDetailsPopup(task) {
   });
 
   closeButton.connect("clicked", () => {
-    Main.uiGroup.remove_child(modalBackground);
+    Main.layoutManager.removeChrome(modalBackground);
     modalBackground.destroy();
   });
 
@@ -349,13 +349,11 @@ function _showTaskDetailsPopup(task) {
   });
 
   openButton.connect("clicked", () => {
-    Main.uiGroup.remove_child(modalBackground);
+    Main.layoutManager.removeChrome(modalBackground);
     modalBackground.destroy();
 
     if (id) {
-      Util.spawnCommandLine(
-        `flatpak run io.github.alainm23.planify --open-task ${id}`
-      );
+      Util.spawnCommandLine(`flatpak run io.github.alainm23.planify`);
     } else {
       _showPlanner();
     }
@@ -376,7 +374,7 @@ function _showTaskDetailsPopup(task) {
       y < modalBox.y1 ||
       y > modalBox.y2
     ) {
-      Main.uiGroup.remove_child(modalBackground);
+      Main.layoutManager.removeChrome(modalBackground);
       modalBackground.destroy();
       return Clutter.EVENT_STOP;
     }
@@ -384,12 +382,16 @@ function _showTaskDetailsPopup(task) {
     return Clutter.EVENT_PROPAGATE;
   });
 
-  Main.uiGroup.add_child(modalBackground);
+  // Add to the top level group and ensure it stays above other windows
+  Main.layoutManager.addChrome(modalBackground, {
+    affectsInputRegion: true,
+    trackFullscreen: true,
+  });
 
   const signalId = global.stage.connect("key-press-event", (actor, event) => {
     if (event.get_key_symbol() === Clutter.KEY_Escape) {
       global.stage.disconnect(signalId);
-      Main.uiGroup.remove_child(modalBackground);
+      Main.layoutManager.removeChrome(modalBackground);
       modalBackground.destroy();
       return Clutter.EVENT_STOP;
     }
