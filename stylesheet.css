@@ -190,10 +190,19 @@
     color: #ffffff;
     font-weight: bold;
     padding: 8px 16px;
+    margin-left: 10px;
 }
 
 .task-modal-button:hover {
     background-color: #2980b9;
+}
+
+.task-done-button {
+    background-color: #2ecc71;
+}
+
+.task-done-button:hover {
+    background-color: #27ae60;
 }
 
 .modal-label {
