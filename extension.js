@@ -9,6 +9,7 @@ const GLib = imports.gi.GLib;
 const ByteArray = imports.byteArray;
 const Clutter = imports.gi.Clutter;
 const Pango = imports.gi.Pango;
+const MessageTray = imports.ui.messageTray;
 
 const Me = ExtensionUtils.getCurrentExtension();
 
@@ -19,16 +20,161 @@ const CONFIG = {
     `${GLib.get_home_dir()}/.var/app/io.github.alainm23.planify/data/io.github.alainm23.planify/database.db`,
   ],
   REFRESH_INTERVAL: 60, // seconds
+  NOTIFICATION: {
+    ENABLED: true,
+    MINUTES_BEFORE: 5, // minutes before due time to send notification
+    CHECK_INTERVAL: 60, // seconds between notification checks
+  },
 };
 
 // Global state
 let button = null;
 let refreshTimeout = null;
+let notificationTimeout = null;
 let taskItems = [];
+let notifiedTaskIds = new Set(); // Keep track of tasks we've already notified about
 
 // =====================================================================
 // Utility Functions
 // =====================================================================
+
+/**
+ * Creates and shows a notification
+ * @param {string} title - The notification title
+ * @param {string} body - The notification body text
+ * @param {string} taskId - The ID of the task for the notification
+ */
+function _showNotification(title, body, taskId) {
+  const source = new MessageTray.Source(Me.metadata.name, "task-due");
+  Main.messageTray.add(source);
+
+  const notification = new MessageTray.Notification(source, title, body);
+  notification.setTransient(false);
+  notification.setUrgency(MessageTray.Urgency.HIGH);
+
+  // Add Open Planify action
+  notification.addAction("Open Planify", () => {
+    _showPlanner();
+  });
+
+  // Add Mark as Done action
+  notification.addAction("Mark as Done", () => {
+    if (taskId) {
+      const updateQuery = `UPDATE Items SET checked = 1 WHERE id = '${taskId}';`;
+      const result = _executeQuery(updateQuery);
+
+      if (result.success) {
+        log(`Task marked as done from notification: ${title}`);
+        _getTodayTasks();
+      } else {
+        log(`Error updating task from notification: ${result.error}`);
+      }
+    }
+  });
+
+  source.showNotification(notification);
+
+  // Add to notified tasks set
+  notifiedTaskIds.add(taskId);
+}
+
+/**
+ * Checks for upcoming tasks and sends notifications
+ */
+function _checkUpcomingTasks() {
+  if (!CONFIG.NOTIFICATION.ENABLED) {
+    return;
+  }
+
+  // Get current time
+  const now = new Date();
+
+  // Calculate the time window for notifications (now + notification window)
+  const notificationWindow = new Date(
+    now.getTime() + CONFIG.NOTIFICATION.MINUTES_BEFORE * 60 * 1000
+  );
+
+  // Format dates for SQL query
+  const nowStr = now.toISOString();
+  const windowStr = notificationWindow.toISOString();
+
+  // Query for tasks due in the notification window that haven't been completed
+  const sqlQuery = `
+    SELECT i.*, l.name as label_name, l.color as label_color 
+    FROM Items i 
+    LEFT JOIN Labels l ON i.labels = l.id 
+    WHERE i.due BETWEEN '${nowStr}' AND '${windowStr}' 
+    AND i.checked = 0 AND i.is_deleted = 0;
+  `;
+
+  const result = _executeQuery(sqlQuery);
+
+  if (!result.success) {
+    log(`Error checking upcoming tasks: ${result.error}`);
+    return;
+  }
+
+  const upcomingTasks = result.data || [];
+
+  // Send notifications for tasks that haven't been notified yet
+  upcomingTasks.forEach((task) => {
+    const taskId = task.id || "";
+    const title = task.content || task.title || "Unknown Task";
+
+    // Skip if we've already notified about this task
+    if (notifiedTaskIds.has(taskId)) {
+      return;
+    }
+
+    // Parse the due date
+    const dueDate = new Date(task.due);
+    const dueTimeStr = dueDate.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    // Create notification message
+    const notificationTitle = `Task Due Soon: ${title}`;
+    const notificationBody = `This task is due at ${dueTimeStr} (in ${CONFIG.NOTIFICATION.MINUTES_BEFORE} minutes)`;
+
+    _showNotification(notificationTitle, notificationBody, taskId);
+    log(`Sent notification for task: ${title} due at ${dueTimeStr}`);
+  });
+
+  // Schedule the next check
+  _scheduleNotificationCheck();
+}
+
+/**
+ * Schedules the next notification check
+ */
+function _scheduleNotificationCheck() {
+  // Clear any existing timeout
+  if (notificationTimeout) {
+    GLib.source_remove(notificationTimeout);
+    notificationTimeout = null;
+  }
+
+  // Set up a new timeout
+  notificationTimeout = GLib.timeout_add_seconds(
+    GLib.PRIORITY_DEFAULT,
+    CONFIG.NOTIFICATION.CHECK_INTERVAL,
+    () => {
+      _checkUpcomingTasks();
+      return GLib.SOURCE_CONTINUE;
+    }
+  );
+}
+
+/**
+ * Clears the notification timeout
+ */
+function _clearNotificationTimeout() {
+  if (notificationTimeout) {
+    GLib.source_remove(notificationTimeout);
+    notificationTimeout = null;
+  }
+}
 
 /**
  * Opens the Planify application
@@ -623,6 +769,19 @@ function enable() {
 
   // Load tasks
   _getTodayTasks();
+
+  // Start notification system
+  if (CONFIG.NOTIFICATION.ENABLED) {
+    // Clear notification tracking
+    notifiedTaskIds.clear();
+
+    // Do an initial check for upcoming tasks
+    _checkUpcomingTasks();
+
+    log(
+      `Notification system enabled, checking every ${CONFIG.NOTIFICATION.CHECK_INTERVAL} seconds`
+    );
+  }
 }
 
 /**
@@ -634,6 +793,12 @@ function disable() {
 
   // Clear the refresh timeout
   _clearRefreshTimeout();
+
+  // Clear the notification timeout
+  _clearNotificationTimeout();
+
+  // Clear notification tracking
+  notifiedTaskIds.clear();
 
   // Clear task items
   taskItems = [];
@@ -670,8 +835,35 @@ function _createMenuItems() {
   openPlanifyItem.connect("activate", _showPlanner);
   button.menu.addMenuItem(openPlanifyItem);
 
+  // Add Test Notification item
+  const testNotificationItem = new PopupMenu.PopupMenuItem("Test Notification");
+  testNotificationItem.connect("activate", _showTestNotification);
+  button.menu.addMenuItem(testNotificationItem);
+
   // Add separator
   button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+}
+
+/**
+ * Shows a test notification for debugging purposes
+ */
+function _showTestNotification() {
+  const testTaskId = `test-${Date.now()}`;
+  const now = new Date();
+  const dueDate = new Date(
+    now.getTime() + CONFIG.NOTIFICATION.MINUTES_BEFORE * 60 * 1000
+  );
+  const dueTimeStr = dueDate.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const title = "Test Task";
+  const notificationTitle = `Task Due Soon: ${title}`;
+  const notificationBody = `This is a test notification. Task would be due at ${dueTimeStr} (in ${CONFIG.NOTIFICATION.MINUTES_BEFORE} minutes)`;
+
+  _showNotification(notificationTitle, notificationBody, testTaskId);
+  log("Test notification sent");
 }
 
 /**
