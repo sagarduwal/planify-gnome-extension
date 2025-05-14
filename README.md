@@ -11,6 +11,8 @@ Since I use Flatpak to run Planify, the planify app is executed with the followi
 flatpak run com.alainm23.planify
 ```
 
+![Planify Demo](assets/planify-demo.png)
+
 To use with this extension, we will need gnome-extensions to be installed.
 To install gnome-shell-extensions or gnome-shell-extension-manager, you can use the following command:
 
@@ -33,11 +35,21 @@ sudo apt install gnome-shell-extension-manager
 ## Build
 
 ```bash
-./autogen.sh
-make
+make all
+make build
+make clean
 make install
+make enable
+make disable
+make uninstall
 ```
 
 ## Usage
 
-After installation, the extension should be available in the GNOME Extensions app.
+After installing the extension using `make install`, you can enable it using `make enable`.
+
+Now you can have it reflected in the GNOME Shell System tray restarting the GNOME Shell.
+You can do it using `Alt + F2` and typing `r` and pressing `Enter`.
+Or you can restart the GNOME Shell, logging out and logging back in.
+
+Note: To disable the extension, you can use `make disable`.
