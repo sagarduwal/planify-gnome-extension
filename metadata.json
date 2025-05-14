@@ -1,0 +1,7 @@
+{
+  "name": "Planify Tray",
+  "description": "Manage Planify tasks from the tray",
+  "version": 1.0,
+  "uuid": "planify-tray@sagarduwal.github.com",
+  "shell-version": ["40", "41", "42"]
+}

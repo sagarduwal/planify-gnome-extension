@@ -1,0 +1,201 @@
+.planner-icon {
+    background-image: url("assets/planify.svg");
+    background-size: 20px;
+    width: 20px;
+    padding: 5px;
+    border-radius: 20px;
+}
+
+.tasks-header {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.task-item-box {
+    margin-right: 8px;
+    padding: 2px 0;
+}
+
+.task-title {
+    font-size: 1em;
+}
+
+.priority-icon {
+    padding-right: 2px;
+}
+
+.priority-low {
+    color: #3498db;
+}
+
+.priority-medium {
+    color: #2ecc71;
+}
+
+.priority-high {
+    color: #f39c12;
+}
+
+.priority-urgent {
+    color: #e74c3c;
+}
+
+.due-date {
+    font-size: 0.9em;
+    color: #7f8c8d;
+    padding: 0 4px;
+}
+
+.tag-box {
+    background-color: rgba(52, 152, 219, 0.3);
+    border-radius: 4px;
+    padding: 0 6px;
+}
+
+.tag-label {
+    font-size: 0.8em;
+    color: #ecf0f1;
+}
+
+.label-box {
+    margin-right: 8px;
+    padding: 0 6px;
+    border-radius: 4px;
+    min-width: 60px;
+    text-align: center;
+}
+
+.label-text {
+    font-size: 0.85em;
+    font-weight: bold;
+    padding: 0 4px;
+    min-width: 50px;
+    text-align: center;
+    display: inline-block;
+}
+
+.label-taupe.label-text {
+    color: #8D8E8F;
+    background-color: rgba(141, 142, 143, 0.2);
+    border-radius: 4px;
+}
+
+.label-berry_red.label-text {
+    color: #B8256F;
+    background-color: rgba(184, 37, 111, 0.2);
+    border-radius: 4px;
+}
+
+.label-yellow.label-text {
+    color: #E9C46A;
+    background-color: rgba(233, 196, 106, 0.2);
+    border-radius: 4px;
+}
+
+.label-lime_green.label-text {
+    color: #7ECC49;
+    background-color: rgba(126, 204, 73, 0.2);
+    border-radius: 4px;
+}
+
+.label-grey.label-text {
+    color: #95A5A6;
+    background-color: rgba(149, 165, 166, 0.2);
+    border-radius: 4px;
+}
+
+.label-blue.label-text {
+    color: #3498DB;
+    background-color: rgba(52, 152, 219, 0.2);
+    border-radius: 4px;
+}
+
+.label-purple.label-text {
+    color: #9B59B6;
+    background-color: rgba(155, 89, 182, 0.2);
+    border-radius: 4px;
+}
+
+.label-orange.label-text {
+    color: #E67E22;
+    background-color: rgba(230, 126, 34, 0.2);
+    border-radius: 4px;
+}
+
+.label-red.label-text {
+    color: #E74C3C;
+    background-color: rgba(231, 76, 60, 0.2);
+    border-radius: 4px;
+}
+
+.reminder-icon {
+    color: #f39c12;
+}
+
+.task-modal-background {
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.task-modal {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    padding: 16px;
+}
+
+.task-modal-header {
+    margin: 0;
+    padding-bottom: 8px;
+}
+
+.task-modal-header > * {
+    margin-right: 8px;
+}
+
+.task-modal-title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.task-modal-close-button {
+    border-radius: 16px;
+    padding: 4px;
+}
+
+.task-modal-close-button:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.task-modal-separator {
+    background-color: rgba(0, 0, 0, 0.1);
+    margin: 8px 0;
+}
+
+.task-modal-content {
+    padding: 8px 0;
+}
+
+.task-modal-description {
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.task-modal-footer {
+    padding-top: 16px;
+}
+
+.task-modal-button {
+    background-color: #3498db;
+    border-radius: 4px;
+    color: #ffffff;
+    font-weight: bold;
+    padding: 8px 16px;
+}
+
+.task-modal-button:hover {
+    background-color: #2980b9;
+}
+
+.modal-label {
+    margin-right: 8px;
+}
