@@ -287,7 +287,7 @@ function _getTodayTasks() {
 
   // Get today's date in YYYY-MM-DD format
   const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
+  const todayStr = today.toLocaleDateString("sv-SE");
 
   // Query for today's uncompleted tasks
   const sqlQuery = `
@@ -422,6 +422,12 @@ function _displayTasks(tasksData) {
       style_class: "task-title",
       x_expand: true,
     });
+
+    // Set text wrapping for long titles
+    titleLabel.clutter_text.line_wrap = true;
+    titleLabel.clutter_text.line_wrap_mode = Pango.WrapMode.WORD_CHAR;
+    titleLabel.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
+
     taskBox.add_child(titleLabel);
 
     // Replace the default label with our custom box

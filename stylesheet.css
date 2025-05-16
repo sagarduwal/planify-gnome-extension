@@ -14,10 +14,14 @@
 .task-item-box {
     margin-right: 8px;
     padding: 2px 0;
+    max-width: 500px;
+    width: 400px;
 }
 
 .task-title {
     font-size: 1em;
+    white-space: normal;
+    word-wrap: break-word;
 }
 
 .priority-icon {
